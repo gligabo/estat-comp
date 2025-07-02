@@ -1,0 +1,108 @@
+\documentclass[12pt]{article}
+
+\usepackage{graphicx}
+\usepackage{mathpazo}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\usepackage[brazil]{babel}
+\usepackage{csquotes}
+\usepackage[sortcites=true]{biblatex}
+\usepackage{bm}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{indentfirst}
+\usepackage{float}
+
+\addbibresource{referencias.bib}
+
+\title{Reconstrução de Imagens via Métodos Bayesianos}
+\author{Gabriel Ligabô}
+
+\begin{document}
+
+\maketitle
+
+\section{Introdução}
+
+\section{Metodologia}
+
+\subsection{Definição do Problema}
+
+Queremos restaurar a imagem original $x \in \mathbb{R}^n$ a partir de uma observação degradada $y \in \mathbb{R}^m$, relacionada por um operador linear $H \in \mathbb{R}^{m \times n}$. Em geral, assume-se que $m = n$.
+
+A formulação matemática do problema é:
+\[
+y = Hx + n,
+\]
+onde $n$ representa ruído aditivo gaussiano com média zero e variância $\sigma^2$. Isto é, assumimos que:
+\begin{align*}
+n &\sim \mathcal{N}(0, \sigma^2 I). \\
+p(n) &= \mathcal{N}(n|0, \sigma^2 I).
+\end{align*}
+
+Neste trabalho, focamos em problemas onde H modela uma convolução periódica (e.g. os pixels na borda direita são tratados como vizinhos dos pixels na borda esquerda.) e espacialmente invariante ("borrão" é o mesmo em toda a imagem). Nesse caso, a matriz H é do tipo bloco-circulante e, por essa propriedade, pode ser diagonalizada pela Transformada Discreta de Fourier (DFT) bidimensional:
+
+\[
+H = U^HDU
+\]
+
+Isto é, estamos diagonalizando o operador de convolução H usando a Transformada Discreta de Fourier Bidimensional (2D DFT).
+Dessa forma, $U$ é a matriz que representa a transformada, $U^H$ é a transposta conjugada e também a inversa de $U$, por fim $D$ é uma matriz diagonal que contém os coeficientes DFT do operador de convolução representado por H.
+
+
+\subsection{Abordagem no Domínio da Frequência (FFT)}
+
+
+As definições feitas na seção anterior implicam que a multiplicação $Hx$ pode ser feita no domínio de Fourier:
+\[
+Hx = U^HDUx
+\]
+
+Se H for inversível, então a estimativa de x é facilmente obtida ao fazer:
+\[
+\hat{x} = U^HD^{-1}Uy
+\]
+
+No entanto, na maioria dos casos, H não é inversível ou é dita uma matriz mal condicionada (i.e., a diagonal de D tem valores muito pequenos), o que leva à amplificação do ruído na estimativa anterior.
+Para contornar esse problema, utiliza-se um método de regularização. Uma escolha comum é o estimador de máxima verossimilhança penalizado (MPLE), ou, sob uma perspectiva Bayesiana, o estimador máximo a posteriori (MAP):
+\[
+\hat{x} = \arg \max_{x} \{\log{p(y|x)} - pen(x)\}
+\]
+onde $p(y|x) = \mathcal{N}(y|Hx, \sigma^2I)$ é a função de verossimilhança e $pen(x)$ é uma função de penalidade (ou -log da priori, $p(x)$). 
+Se a priori sobre a imagem $p(x)$ for assumida como uma gaussiana com média $\mu$ e matriz de covariância $G$, a estimativa MAP pode ser escrita como:
+
+\begin{align}
+\hat{x} &= \arg \max_{x} \{\frac{-1}{\sigma^2}||Hx - y||^2 - (x - \mu)^HG^{-1}(x-\mu)  \}\\
+        &= \mu + GH^H (\sigma^2I + HGH^H)^{-1} (y-H\mu)   
+\end{align}
+
+Para que a solução MAP na equação (2) seja computacionalmente eficiente, assume-se que a imagem original $x$ pode ser modelada como um campo gaussiano estacionário com condições de contorno periódicas. Essa premissa implica que a matriz de covariância da priori, $G$, também é bloco-circulante e, portanto, também é diagonalizada pela DFT. Podemos escrever $G = U^H C U$, onde C é uma matriz diagonal.
+
+Com isso, a equação (2) pode ser implementada de forma eficiente no domínio da frequência:
+\[
+\hat{x} = \mu + U^H C D^H (\sigma^2I + DCD^H)^{-1} (Uy - DU\mu)
+\]
+
+Apesar da eficiência, essa abordagem tem uma limitação fundamental: imagens do mundo real não são bem modeladas por campos gaussianos estacionários. A energia do sinal de uma imagem típica não se concentra no domínio de Fourier, o que torna difícil separar o sinal do ruído de forma eficaz. Essa limitação motiva a busca por representações mais adequadas, como o domínio Wavelet.
+
+
+\subsection{Abordagem no Domínio Wavelet (DWT)}
+
+
+
+\subsection{O Algoritmo Expectation-Maximization (EM)}
+
+
+\subsection{Esquema Geral do Algoritmo}
+
+
+\section{Resultados}
+
+
+\section{Conclusão}
+
+
+\printbibliography
+
+\end{document}
